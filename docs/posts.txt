@@ -1,0 +1,3 @@
+
+
+Cadastre e ative ofertas com links válidos em data/ofertas.json.
