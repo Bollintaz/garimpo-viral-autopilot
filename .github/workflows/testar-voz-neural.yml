@@ -1,0 +1,41 @@
+name: Testar vozes neurais PT-BR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gerar-audios:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencias do Kokoro
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq espeak-ng libsndfile1
+          python -m pip install --disable-pip-version-check "kokoro>=0.9.4,<1" soundfile
+      - name: Sintetizar duas vozes brasileiras
+        run: |
+          mkdir -p saida
+          python - <<'PY'
+          from kokoro import KPipeline
+          import soundfile as sf
+          import numpy as np
+          pipeline = KPipeline(lang_code="p")
+          texto = "Você já viu uma ideia simples que transforma o dia a dia? Aqui no Garimpo Viral, a gente mostra novidades, curiosidades e soluções que valem a pena conhecer. Segue a página para não perder as próximas!"
+          for voz in ("pf_dora", "pm_alex"):
+              chunks = [audio for _, _, audio in pipeline(texto, voice=voz, speed=1.05)]
+              if not chunks:
+                  raise RuntimeError(f"Nenhum audio para {voz}")
+              sf.write(f"saida/{voz}.wav", np.concatenate(chunks), 24000)
+              print(f"Gerada voz {voz}")
+          PY
+      - name: Entregar audios para comparacao
+        uses: actions/upload-artifact@v4
+        with:
+          name: comparacao-vozes-ptbr
+          path: saida/*.wav
+          retention-days: 7
