@@ -1,0 +1,1 @@
+# Cenas geradas por IA\n\nColoque aqui um ou mais clipes MP4 **realmente gerados por um modelo de vídeo**. O workflow não inventa cenas, não gera vídeo sintético com um fundo estático e não publica no Facebook.\n\nArquivos MP4 maiores que 25 MB exigem upload por Git local/Git LFS ou outra estratégia.\n
