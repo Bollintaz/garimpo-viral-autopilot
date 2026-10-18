@@ -1,0 +1,37 @@
+name: Gerar Reel de teste PT-BR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gerar-video:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Instalar ferramentas gratuitas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg espeak-ng fonts-dejavu-core
+
+      - name: Criar narracao PT-BR e MP4 vertical
+        run: |
+          mkdir -p saida
+          espeak-ng -v pt-br -s 145 -w saida/narracao.wav "Olha esse achadinho para facilitar sua rotina! No Garimpo Viral, voce encontra ideias praticas para o dia a dia. Confira as novidades na pagina."
+          ffmpeg -hide_banner -loglevel error -y \
+            -f lavfi -i "color=c=0x102638:s=720x1280:r=30:d=15" \
+            -i saida/narracao.wav \
+            -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='GARIMPO VIRAL':fontcolor=yellow:fontsize=60:x=(w-text_w)/2:y=250,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='ACHADINHOS DO DIA':fontcolor=white:fontsize=37:x=(w-text_w)/2:y=540:enable='between(t,1,7)',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:text='SIGA PARA VER MAIS':fontcolor=white:fontsize=35:x=(w-text_w)/2:y=760:enable='gte(t,7)'" \
+            -c:v libx264 -preset veryfast -crf 26 -pix_fmt yuv420p \
+            -c:a aac -b:a 128k -t 15 -shortest -movflags +faststart \
+            saida/garimpo-viral-teste.mp4
+          ffprobe -v error -show_entries format=duration,size -of default=noprint_wrappers=1 saida/garimpo-viral-teste.mp4
+
+      - name: Disponibilizar video para baixar
+        uses: actions/upload-artifact@v4
+        with:
+          name: reel-garimpo-viral-ptbr
+          path: saida/garimpo-viral-teste.mp4
+          retention-days: 7
